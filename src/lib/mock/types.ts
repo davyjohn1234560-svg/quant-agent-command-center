@@ -38,7 +38,7 @@ export interface Task {
   updatedAt: string;
   progress: number;
   category: string;
-  error?: string;
+  error?: string | undefined;
   handoffs: Handoff[];
 }
 

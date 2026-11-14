@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { AlertOctagon } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, Line, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -33,7 +33,7 @@ const chartConfig = {
 
 function StrategiesPage() {
   const { refreshing } = useDemo();
-  const [id, setId] = useState(STRATEGIES[0].id);
+  const [id, setId] = useState(STRATEGIES[0]?.id ?? "");
   const s = STRATEGIES.find((x) => x.id === id)!;
   const m = s.metrics;
 
@@ -123,7 +123,7 @@ function StrategiesPage() {
                   <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
                   <ChartLegend content={<ChartLegendContent />} />
                   <Area dataKey="strategy" type="monotone" stroke="var(--color-strategy)" fill="url(#fillStrategy)" strokeWidth={2} />
-                  <Line dataKey="benchmark" type="monotone" stroke="var(--color-benchmark)" strokeDasharray="4 4" dot={false} strokeWidth={1.5} />
+                  <Area dataKey="benchmark" type="monotone" stroke="var(--color-benchmark)" fill="none" strokeDasharray="4 4" dot={false} strokeWidth={1.5} />
                 </AreaChart>
               </ChartContainer>
             )}

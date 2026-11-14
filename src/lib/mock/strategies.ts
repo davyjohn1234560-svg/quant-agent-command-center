@@ -37,17 +37,21 @@ export function simulateCurve(seed: number, drift: number, vol: number): EquityP
 export function computeMetrics(curve: EquityPoint[], seed: number): StrategyMetrics {
   const rets: number[] = [];
   for (let i = 1; i < curve.length; i++) {
-    rets.push(curve[i].strategy / curve[i - 1].strategy - 1);
+    const cur = curve[i];
+    const prev = curve[i - 1];
+    if (cur && prev) rets.push(cur.strategy / prev.strategy - 1);
   }
   const mean = rets.reduce((a, r) => a + r, 0) / rets.length;
   const sd = Math.sqrt(rets.reduce((a, r) => a + (r - mean) ** 2, 0) / rets.length);
-  let peak = curve[0].strategy;
+  const first = curve[0];
+  const last = curve[curve.length - 1];
+  if (!first || !last || rets.length === 0) throw new Error("computeMetrics: curve needs at least 2 points");
+  let peak = first.strategy;
   let mdd = 0;
   for (const p of curve) {
     peak = Math.max(peak, p.strategy);
     mdd = Math.min(mdd, p.strategy / peak - 1);
   }
-  const last = curve[curve.length - 1];
   const years = (curve.length - 1) / 52;
   const rand = mulberry32(seed + 99);
   return {
