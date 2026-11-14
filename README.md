@@ -27,23 +27,23 @@ Safety and interaction requirements:
 - Make pages navigable and interactions useful with local mock state only.
 - Use Chinese labels and concise Chinese helper text. Ensure good empty states, loading states, and responsive layout.
 
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/acc52a18-f361-4085-a369-85f878a3c0de).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+This project is maintained as a local-first application. Lovable is not required for local development or runtime.
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Use Node.js or Bun. Prefer the checked-in bun.lock and the Bun version documented by the operator environment.
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-npm i
-npm run dev
+bun install --frozen-lockfile
+bun run dev
 ```
+
+
+## Local-first status
+
+- The current UI still uses clearly labeled mock/demo data.
+- No Agent Runtime, quant database, broker, SSH, or host integration is connected.
+- Development and preview servers bind to loopback by default.
+- Do not expose this control plane to a network until authentication, authorization, and audit controls are implemented.
