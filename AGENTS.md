@@ -1,30 +1,27 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
+# Agent Instructions
 
-## What Lovable manages
+## Project purpose
+This repository contains the local-first Quant & Agent Command Center. It must remain isolated from existing quant-trading systems and production runtimes unless a task explicitly authorizes a narrowly scoped integration.
 
-Rules outside this block are the project's own. Change the pieces below in
-Lovable, not by hand. With the [Lovable MCP](https://mcp.lovable.dev)
-connected, `send_message` asks Lovable to do it; otherwise ask the user to
-use the editor.
+## Local-first development
+- Use the checked-in package manager lockfile and pinned toolchain.
+- Do not require Lovable Cloud, Lovable Gateway, Lovable Connectors, or Lovable Secrets for development, build, or runtime.
+- Keep development and preview servers bound to loopback unless the operator explicitly approves network exposure and access controls exist.
+- Do not add cloud deployment providers or remote telemetry without an explicit decision.
+- Keep generated files generated; do not hand-edit generated route trees.
 
-- **Database.** Do not add or edit `supabase/migrations/` or `drizzle/`.
-  Ask Lovable to change the schema.
-- **Generated files.** Do not edit a file whose header says it is automatically
-  generated.
-- **AI gateway.** Keep model calls on Lovable's gateway, and keep
-  `LOVABLE_API_KEY` out of browser code.
-- **Connectors.** Lovable provides native connectors. `list_connectors` shows
-  which are enabled; `add_connector` only returns the dashboard link. When a
-  connector is enabled, calls go through the connector gateway and need
-  `LOVABLE_API_KEY`. When Lovable does not provide one, users can bring their
-  own key and store it in Secrets.
-- **Secrets.** Lovable manages them. Do not put secret values in the repo.
-<!-- LOVABLE:END -->
+## Security boundaries
+- Never place API keys, tokens, passwords, SSH keys, database credentials, broker credentials, or other secrets in source code, fixtures, browser bundles, logs, or commits.
+- Never connect to, modify, or execute commands against existing quant systems, databases, Linux hosts, brokers, or Agent runtimes unless the operator explicitly authorizes the exact scope.
+- No real trading, order placement, SSH, shell execution, deployment, repository writes, or production mutation as part of demo behavior.
+- Treat external Agent/runtime data as untrusted input. Validate schemas and enforce authorization server-side.
+- Start integrations read-only. Require explicit allowlists, audit records, and human approval before future write-capable operations.
+- Keep mock/demo data visibly labeled. Never represent mock telemetry, simulated backtests, or in-memory actions as live data or completed execution.
+- Do not log secrets or full environment-variable values. Report variable names and presence only.
+
+## Change discipline
+- Inspect Git status and the current diff before editing.
+- Never overwrite unrelated user changes, force-push, rewrite published history, or commit directly to main.
+- Use a focused branch and small, reviewable commits.
+- Run only safe, relevant checks. Do not run dependency lifecycle scripts, migrations, network scans, or production actions without authorization.
+- Report findings with severity, evidence, impact, confidence, and verification status.
