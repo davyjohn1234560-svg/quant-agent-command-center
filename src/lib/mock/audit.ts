@@ -37,6 +37,8 @@ const SEED_EVENTS: EventInput[] = [
   { id: "E-008", at: "2026-11-13 14:20:03", actor: "操作员（演示）", action: "拒绝删除研究库快照", target: "postgres-research", risk: "high", result: "已拒绝" },
   { id: "E-009", at: "2026-11-13 14:52:11", actor: "操作员（演示）", action: "提交生产升级申请", target: "agent-runtime v2.4.0", risk: "critical", result: "待审批" },
   { id: "E-010", at: "2026-11-13 15:01:00", actor: "数据管道", action: "研究库批次校验", target: "cn_daily_2026-11-13", risk: "low", result: "成功" },
+  { id: "E-011", at: "2026-11-13 15:10:00", actor: "操作员（演示）", action: "合并美股专项任务（本地演示数据）", target: "T-2049 + T-2054 + T-2051 美股部分 → T-2056", risk: "low", result: "成功" },
+  { id: "E-012", at: "2026-11-13 15:12:00", actor: "操作员（演示）", action: "创建 Git 仓库只读审查任务（仓库待绑定，未派发）", target: "T-2057", risk: "medium", result: "成功" },
 ];
 
 export const AUDIT_EVENTS: AuditEvent[] = SEED_EVENTS.reduce<AuditEvent[]>(

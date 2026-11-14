@@ -29,6 +29,7 @@ export const TASK_STATUS: Record<TaskStatus, Meta> = {
   succeeded: { label: "已完成", variant: "success" },
   failed: { label: "失败", variant: "danger" },
   cancelled: { label: "已取消", variant: "muted" },
+  merged: { label: "已并入", variant: "muted" },
 };
 
 export const PRIORITY: Record<Priority, Meta> = {

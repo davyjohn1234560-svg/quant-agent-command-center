@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, ListChecks, RotateCcw, Search, XCircle } from "lucide-react";
+import { Archive, ArrowRight, FileText, GitBranch, GitMerge, ListChecks, Lock, RotateCcw, Search, Split, XCircle } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,7 +24,7 @@ import { canCancel, canRetry } from "@/lib/demo-state";
 import { useDemo } from "@/lib/demo-store";
 import { PRIORITY, TASK_STATUS } from "@/lib/labels";
 import { AGENTS, agentById } from "@/lib/mock/agents";
-import type { Priority, TaskStatus } from "@/lib/mock/types";
+import type { Priority, Task, TaskStatus } from "@/lib/mock/types";
 
 export const Route = createFileRoute("/tasks")({
   head: () => ({
@@ -62,6 +63,10 @@ function TasksPage() {
   return (
     <>
       <PageHeader title="任务中心" description="任务队列与交接链路。重试 / 取消仅修改本页的模拟状态，不会发送到 Agent Runtime。" />
+
+      <SafetyNotice>
+        演示任务 · 尚未连接真实运行时：以下任务、进度和合并记录都是本地演示数据，没有派发到任何本地 Agent、GitHub 或运行时，也没有真实执行结果。
+      </SafetyNotice>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList className="flex-wrap">
@@ -124,16 +129,23 @@ function TasksPage() {
                   <TableCell className="num text-xs text-muted-foreground">{t.id}</TableCell>
                   <TableCell className="max-w-[320px]">
                     <div className="truncate font-medium">{t.title}</div>
-                    <div className="text-xs text-muted-foreground">{t.category}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+                      <span>{t.category}</span>
+                      <TaskFlags task={t} />
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm">{agentById(t.ownerId)?.name}</TableCell>
                   <TableCell><StatusBadge meta={PRIORITY[t.priority]} /></TableCell>
                   <TableCell><StatusBadge meta={TASK_STATUS[t.status]} dot /></TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-2">
-                      <Progress value={t.progress} className="h-1.5" />
-                      <span className="num w-9 text-right text-xs text-muted-foreground">{t.progress}%</span>
-                    </div>
+                    {t.status === "merged" ? (
+                      <span className="text-xs text-muted-foreground">已归档</span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Progress value={t.progress} className="h-1.5" />
+                        <span className="num w-9 text-right text-xs text-muted-foreground">{t.progress}%</span>
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="num hidden text-xs text-muted-foreground lg:table-cell">{t.createdAt}</TableCell>
                 </TableRow>
@@ -159,10 +171,108 @@ function TasksPage() {
               </SheetHeader>
 
               <div className="mt-6 space-y-6">
+                {selected.summary && <p className="text-sm leading-relaxed text-muted-foreground">{selected.summary}</p>}
+
+                {selected.mergedInto && (
+                  <div className="flex items-start gap-2.5 rounded-md border bg-muted/40 px-3 py-2.5 text-xs">
+                    <Archive className="mt-px size-4 shrink-0 text-muted-foreground" />
+                    <div className="space-y-1.5">
+                      <p>
+                        本任务已并入{" "}
+                        <button type="button" className="num font-medium text-primary underline-offset-2 hover:underline" onClick={() => setSelectedId(selected.mergedInto ?? null)}>
+                          {selected.mergedInto}
+                        </button>
+                        ，记录归档保留，不再单独执行。
+                      </p>
+                      {selected.statusBeforeMerge && (
+                        <p className="text-muted-foreground">合并前状态：{TASK_STATUS[selected.statusBeforeMerge].label} · 进度 {selected.progress}%</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selected.splitNote && (
+                  <div className="flex items-start gap-2.5 rounded-md border bg-muted/40 px-3 py-2.5 text-xs">
+                    <Split className="mt-px size-4 shrink-0 text-muted-foreground" />
+                    <div className="space-y-1">
+                      <p>{selected.splitNote}</p>
+                      {selected.originalTitle && <p className="text-muted-foreground">原标题：{selected.originalTitle}</p>}
+                    </div>
+                  </div>
+                )}
+
+                {selected.target && (
+                  <div className="space-y-2">
+                    <h3 className="flex items-center gap-1.5 text-sm font-semibold"><GitBranch className="size-4" /> 审查目标</h3>
+                    <div className="space-y-1.5 rounded-md border border-warning/30 bg-warning/5 px-3 py-2.5 text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-foreground">{selected.target.label}</span>
+                        <Badge variant="warning" className="ml-auto">待绑定</Badge>
+                      </div>
+                      <p className="text-muted-foreground">{selected.target.note}</p>
+                    </div>
+                  </div>
+                )}
+
+                {selected.mergeSources && selected.mergeSources.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="flex items-center gap-1.5 text-sm font-semibold"><GitMerge className="size-4" /> 合并来源</h3>
+                    <ul className="divide-y rounded-md border">
+                      {selected.mergeSources.map((m) => (
+                        <li key={m.id} className="space-y-0.5 px-3 py-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <button type="button" className="num text-xs font-medium text-primary underline-offset-2 hover:underline" onClick={() => setSelectedId(m.id)}>
+                              {m.id}
+                            </button>
+                            <span className="min-w-0 truncate">{m.title}</span>
+                            <Badge variant={m.coverage === "全部" ? "muted" : "info"} className="ml-auto">{m.coverage === "全部" ? "整体并入" : "部分并入"}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{m.note}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selected.scope && selected.scope.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold">{selected.mergeSources ? "合并范围" : "范围"}</h3>
+                    <ul className="list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                      {selected.scope.map((x) => <li key={x}>{x}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {selected.boundaries && selected.boundaries.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="flex items-center gap-1.5 text-sm font-semibold"><Lock className="size-4" /> 执行边界（第一阶段只读）</h3>
+                    <ul className="space-y-1 rounded-md border border-demo/30 bg-demo/5 px-3 py-2.5 text-xs text-demo">
+                      {selected.boundaries.map((b) => <li key={b}>· {b}</li>)}
+                    </ul>
+                  </div>
+                )}
+
+                {selected.deliverables && selected.deliverables.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="flex items-center gap-1.5 text-sm font-semibold"><FileText className="size-4" /> 交付物</h3>
+                    <ul className="divide-y rounded-md border">
+                      {selected.deliverables.map((d) => (
+                        <li key={d.name} className="space-y-0.5 px-3 py-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <span className="num font-medium">{d.name}</span>
+                            <Badge variant="muted" className="ml-auto">尚未产出</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{d.note}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div>
                   <KV k="创建时间" v={selected.createdAt} mono />
                   <KV k="最近更新" v={selected.updatedAt} mono />
-                  <KV k="进度" v={`${selected.progress}%`} mono />
+                  <KV k="进度" v={selected.status === "merged" ? "已归档" : `${selected.progress}%（演示值）`} mono />
                   {selected.error && <KV k="错误信息" v={<span className="text-destructive">{selected.error}</span>} />}
                 </div>
 
@@ -206,15 +316,29 @@ function TasksPage() {
                     >
                       <XCircle /> 取消（演示）
                     </DemoActionButton>
+                    {selected.target && <DemoActionButton locked>绑定仓库</DemoActionButton>}
+                    {selected.target && <DemoActionButton locked>开始审查</DemoActionButton>}
                     <DemoActionButton locked>强制终止进程</DemoActionButton>
                   </div>
-                  <p className="text-xs text-muted-foreground">仅「失败 / 已取消」可重试，仅「排队中 / 运行中」可取消。</p>
+                  <p className="text-xs text-muted-foreground">仅「失败 / 已取消」可重试，仅「排队中 / 运行中」可取消；「已并入」的归档任务不可操作。</p>
                 </div>
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
+    </>
+  );
+}
+
+function TaskFlags({ task: t }: { task: Task }) {
+  return (
+    <>
+      {t.mergedInto && <Badge variant="muted"><Archive className="size-3" />已并入 {t.mergedInto}</Badge>}
+      {t.mergeSources && <Badge variant="info"><GitMerge className="size-3" />合并 {t.mergeSources.length} 项来源</Badge>}
+      {t.splitNote && <Badge variant="muted"><Split className="size-3" />已拆分</Badge>}
+      {t.target && !t.target.bound && <Badge variant="warning"><GitBranch className="size-3" />仓库待绑定</Badge>}
+      {t.boundaries && <Badge variant="demo"><Lock className="size-3" />只读</Badge>}
     </>
   );
 }

@@ -18,7 +18,8 @@ export interface Agent {
   description: string;
 }
 
-export type TaskStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
+/** "merged" = archived source task whose scope now lives in another task (kept for history). */
+export type TaskStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled" | "merged";
 export type Priority = "P0" | "P1" | "P2" | "P3";
 
 export interface Handoff {
@@ -40,6 +41,45 @@ export interface Task {
   category: string;
   error?: string | undefined;
   handoffs: Handoff[];
+  /** Plain-language description shown in the detail sheet. */
+  summary?: string;
+  /** Title before a split/rename, kept so history stays readable. */
+  originalTitle?: string;
+  /** Explains how this task was split, e.g. which part moved elsewhere. */
+  splitNote?: string;
+  /** Set on archived source tasks: the id of the task they were merged into. */
+  mergedInto?: string;
+  /** Status the source task had right before it was merged. */
+  statusBeforeMerge?: Exclude<TaskStatus, "merged">;
+  /** Set on a consolidated task: where its scope came from. */
+  mergeSources?: MergeSource[];
+  scope?: string[];
+  /** Work target that must be confirmed before the task can start. */
+  target?: TaskTarget;
+  /** Hard execution limits for this task. */
+  boundaries?: string[];
+  deliverables?: Deliverable[];
+}
+
+export interface MergeSource {
+  id: string;
+  title: string;
+  coverage: "全部" | "部分";
+  note: string;
+}
+
+export interface TaskTarget {
+  label: string;
+  /** Always false in this prototype: no repository is ever bound. */
+  bound: false;
+  note: string;
+}
+
+export interface Deliverable {
+  name: string;
+  note: string;
+  /** Always false: the prototype never produces real outputs. */
+  produced: false;
 }
 
 export type Market = "A股" | "美股";
